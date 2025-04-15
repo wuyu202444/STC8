@@ -1,0 +1,97 @@
+C51 COMPILER V9.60.7.0   TURN                                                              04/15/2025 15:56:17 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TURN
+OBJECT MODULE PLACED IN .\Objects\turn.obj
+COMPILER INVOKED BY: D:\AAAwork\Keil_v5\C51\BIN\C51.EXE turn.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listi
+                    -ngs\turn.lst) OBJECT(.\Objects\turn.obj)
+
+line level    source
+
+   1          #include "turn.h"
+   2          #include "led_define.h"
+   3          #include <STC8H.H>
+   4          
+   5          extern int led_index;
+   6          extern volatile char current_direction;
+   7          //转向
+   8          void turn() {
+   9   1              if(current_direction == 's') {
+  10   2                      LED1 = 1;
+  11   2                      LED2 = 1;
+  12   2                      LED3 = 1;
+  13   2                      LED4 = 1;
+  14   2                      LED5 = 1;
+  15   2                      LED6 = 1;
+  16   2                      LED7 = 1;
+  17   2                      LED8 = 1;
+  18   2              }else if(current_direction == 'l') {
+  19   2                      LED1 = (led_index == 7 ? 0 : 1);
+  20   2                      LED2 = (led_index == 6 ? 0 : 1);
+  21   2                      LED3 = (led_index == 5 ? 0 : 1);
+  22   2                      LED4 = (led_index == 4 ? 0 : 1);
+  23   2                      LED5 = (led_index == 3 ? 0 : 1);
+  24   2                      LED6 = (led_index == 2 ? 0 : 1);
+  25   2                      LED7 = (led_index == 1 ? 0 : 1);
+  26   2                      LED8 = (led_index == 0 ? 0 : 1);
+  27   2              }else if(current_direction == 'r') {
+  28   2                      LED1 = (led_index == 0 ? 0 : 1);
+  29   2                      LED2 = (led_index == 1 ? 0 : 1);
+  30   2                      LED3 = (led_index == 2 ? 0 : 1);
+  31   2                      LED4 = (led_index == 3 ? 0 : 1);
+  32   2                      LED5 = (led_index == 4 ? 0 : 1);
+  33   2                      LED6 = (led_index == 5 ? 0 : 1);
+  34   2                      LED7 = (led_index == 6 ? 0 : 1);
+  35   2                      LED8 = (led_index == 7 ? 0 : 1);
+  36   2              }
+  37   1      }
+  38          
+  39          //关闭
+  40          void stop() {
+  41   1              LED1 = 1;
+  42   1              LED2 = 1;
+  43   1              LED3 = 1;
+  44   1              LED4 = 1;
+  45   1              LED5 = 1;
+  46   1              LED6 = 1;
+  47   1              LED7 = 1;
+  48   1              LED8 = 1;
+  49   1      }
+  50          //左转
+  51          void turn_left() {
+  52   1              LED1 = (led_index == 7 ? 0 : 1);
+  53   1              LED2 = (led_index == 6 ? 0 : 1);
+  54   1              LED3 = (led_index == 5 ? 0 : 1);
+C51 COMPILER V9.60.7.0   TURN                                                              04/15/2025 15:56:17 PAGE 2   
+
+  55   1              LED4 = (led_index == 4 ? 0 : 1);
+  56   1              LED5 = (led_index == 3 ? 0 : 1);
+  57   1              LED6 = (led_index == 2 ? 0 : 1);
+  58   1              LED7 = (led_index == 1 ? 0 : 1);
+  59   1              LED8 = (led_index == 0 ? 0 : 1);
+  60   1      }
+  61          //右转
+  62          void turn_right() {
+  63   1              LED1 = (led_index == 0 ? 0 : 1);
+  64   1              LED2 = (led_index == 1 ? 0 : 1);
+  65   1              LED3 = (led_index == 2 ? 0 : 1);
+  66   1              LED4 = (led_index == 3 ? 0 : 1);
+  67   1              LED5 = (led_index == 4 ? 0 : 1);
+  68   1              LED6 = (led_index == 5 ? 0 : 1);
+  69   1              LED7 = (led_index == 6 ? 0 : 1);
+  70   1              LED8 = (led_index == 7 ? 0 : 1);
+  71   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    495    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

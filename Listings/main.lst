@@ -1,0 +1,188 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              04/15/2025 18:18:41 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\AAAwork\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listi
+                    -ngs\main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          //转向灯 = UART + 流水灯
+   2          //输入l 左转
+   3          //输入r 右转
+   4          //输入s 关闭
+   5          
+   6          #include "Config.h"
+   7          #include "GPIO.h"
+   8          #include "UART.h"
+   9          #include "NVIC.h"
+  10          #include "Switch.h"
+  11          #include "Timer.h"
+  12          #include "Delay.h"
+  13          
+  14          #define LED_SW  P45
+  15          #define LED1    P27
+  16          #define LED2    P26
+  17          #define LED3    P15
+  18          #define LED4    P14
+  19          #define LED5    P23
+  20          #define LED6    P22
+  21          #define LED7    P21
+  22          #define LED8    P20
+  23          
+  24          int counter = 0;
+  25          int led_index = 0;
+  26          char current_direction = 's';
+  27          
+  28          void GPIO_config();
+  29          void UART_config();
+  30          void Timer_config();
+  31          void stop();
+  32          void turn_left();
+  33          void turn_right();
+  34          void receive();
+  35          
+  36          void main() {
+  37   1          //初始化 GPIO UART1 Timer0
+  38   1          GPIO_config();
+  39   1          UART_config();
+  40   1          Timer_config();
+  41   1          //开启全局中断
+  42   1          EA = 1;
+  43   1          //打开LED_SW
+  44   1          LED_SW = 0;
+  45   1      
+  46   1      
+  47   1          while (1) {
+  48   2                      receive();
+  49   2          }
+  50   1      }
+  51          
+  52          
+  53          //初始化GPIO
+  54          void GPIO_config(void) {
+C51 COMPILER V9.60.7.0   MAIN                                                              04/15/2025 18:18:41 PAGE 2   
+
+  55   1          //所有LED初始化为推挽输出
+  56   1          P4_MODE_OUT_PP(GPIO_Pin_5);
+  57   1          P2_MODE_OUT_PP(GPIO_Pin_7);
+  58   1          P2_MODE_OUT_PP(GPIO_Pin_6);
+  59   1          P2_MODE_OUT_PP(GPIO_Pin_3);
+  60   1          P2_MODE_OUT_PP(GPIO_Pin_2);
+  61   1          P2_MODE_OUT_PP(GPIO_Pin_1);
+  62   1          P2_MODE_OUT_PP(GPIO_Pin_0);
+  63   1          P1_MODE_OUT_PP(GPIO_Pin_5);
+  64   1          P1_MODE_OUT_PP(GPIO_Pin_4);
+  65   1          //初始化串口P30 P31为准双向
+  66   1          P3_MODE_IO_PU(GPIO_Pin_0);
+  67   1          P3_MODE_IO_PU(GPIO_Pin_1);
+  68   1      }
+  69          
+  70          //初始化UART1
+  71          void UART_config(void) {
+  72   1          // >>> 记得添加 NVIC.c, UART.c, UART_Isr.c <<<
+  73   1          COMx_InitDefine             COMx_InitStructure;                                     //结构定义
+  74   1          COMx_InitStructure.UART_Mode      = UART_8bit_BRTx; //模式, UART_ShiftRight,UART_8bit_BRTx,UART_9bit,U
+             -ART_9bit_BRTx
+  75   1          COMx_InitStructure.UART_BRT_Use   = BRT_Timer1;                     //选择波特率发生器, BRT_Timer1, BRT_Timer2 (注意: 串
+             -口2固定使用BRT_Timer2)
+  76   1          COMx_InitStructure.UART_BaudRate  = 115200ul;                       //波特率, 一般 110 ~ 115200
+  77   1          COMx_InitStructure.UART_RxEnable  = ENABLE;                         //接收允许,   ENABLE或DISABLE
+  78   1          COMx_InitStructure.BaudRateDouble = DISABLE;                        //波特率加倍, ENABLE或DISABLE
+  79   1          UART_Configuration(UART1, &COMx_InitStructure);             //初始化串口1 UART1,UART2,UART3,UART4
+  80   1      
+  81   1          NVIC_UART1_Init(ENABLE,Priority_1);         //中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,
+             -Priority_2,Priority_3
+  82   1          UART1_SW(UART1_SW_P30_P31);         // 引脚选择, UART1_SW_P30_P31,UART1_SW_P36_P37,UART1_SW_P16_P17,UART1_SW_
+             -P43_P44
+  83   1      }
+  84          
+  85          //初始化 Timer0
+  86          void Timer_config(void) {
+  87   1          TIM_InitTypeDef             TIM_InitStructure;                                              //结构定义
+  88   1          //定时器0做16位自动重装, 中断频率为1000HZ
+  89   1          TIM_InitStructure.TIM_Mode      = TIM_16BitAutoReload;      //指定工作模式,   TIM_16BitAutoReload,TIM_16Bit
+             -,TIM_8BitAutoReload,TIM_16BitAutoReloadNoMask
+  90   1          TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;             //指定时钟源,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOC
+             -K_Ext
+  91   1          TIM_InitStructure.TIM_ClkOut    = DISABLE;                          //是否输出高速脉冲, ENABLE或DISABLE
+  92   1          TIM_InitStructure.TIM_Value     = 65536UL - (MAIN_Fosc / 1000UL);           //初值,
+  93   1          TIM_InitStructure.TIM_Run       = ENABLE;                           //是否初始化后启动定时器, ENABLE或DISABLE
+  94   1          Timer_Inilize(Timer0,&TIM_InitStructure);                           //初始化Timer0    Timer0,Timer1,Timer2,Timer3,Timer4
+  95   1          NVIC_Timer0_Init(ENABLE,Priority_0);                //中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1
+             -,Priority_2,Priority_3
+  96   1      }
+  97          
+  98          //关闭
+  99          void stop() {
+ 100   1          LED1 = 1;
+ 101   1          LED2 = 1;
+ 102   1          LED3 = 1;
+ 103   1          LED4 = 1;
+ 104   1          LED5 = 1;
+ 105   1          LED6 = 1;
+ 106   1          LED7 = 1;
+ 107   1          LED8 = 1;
+ 108   1      }
+ 109          //左转
+C51 COMPILER V9.60.7.0   MAIN                                                              04/15/2025 18:18:41 PAGE 3   
+
+ 110          void turn_left() {
+ 111   1          LED1 = (led_index == 7 ? 0 : 1);
+ 112   1          LED2 = (led_index == 6 ? 0 : 1);
+ 113   1          LED3 = (led_index == 5 ? 0 : 1);
+ 114   1          LED4 = (led_index == 4 ? 0 : 1);
+ 115   1          LED5 = (led_index == 3 ? 0 : 1);
+ 116   1          LED6 = (led_index == 2 ? 0 : 1);
+ 117   1          LED7 = (led_index == 1 ? 0 : 1);
+ 118   1          LED8 = (led_index == 0 ? 0 : 1);
+ 119   1      }
+ 120          //右转
+ 121          void turn_right() {
+ 122   1          LED1 = (led_index == 0 ? 0 : 1);
+ 123   1          LED2 = (led_index == 1 ? 0 : 1);
+ 124   1          LED3 = (led_index == 2 ? 0 : 1);
+ 125   1          LED4 = (led_index == 3 ? 0 : 1);
+ 126   1          LED5 = (led_index == 4 ? 0 : 1);
+ 127   1          LED6 = (led_index == 5 ? 0 : 1);
+ 128   1          LED7 = (led_index == 6 ? 0 : 1);
+ 129   1          LED8 = (led_index == 7 ? 0 : 1);
+ 130   1      }
+ 131          
+ 132          //接收数据
+ 133          void receive() {
+ 134   1              u8 i;
+ 135   1          //接收数据
+ 136   1          delay_ms(1);
+ 137   1          if(COM1.RX_TimeOut > 0) {
+ 138   2              //超时计数
+ 139   2              if(--COM1.RX_TimeOut == 0) {
+ 140   3                  if(COM1.RX_Cnt > 0) {
+ 141   4                      // 这里处理收到的数据，做具体的逻辑，可以调用自己的on_uart1_recv
+ 142   4                      for(i=0; i<COM1.RX_Cnt; i++)    {
+ 143   5                          // RX1_Buffer[i]存的是接收的每个字节，写出用 TX1_write2buff
+ 144   5                          current_direction = RX1_Buffer[i];
+ 145   5                                              if(current_direction == 's') printf("关闭转向灯\n");
+ 146   5                                              else if(current_direction == 'l') printf("左转\n");
+ 147   5                                              else if(current_direction == 'r') printf("右转\n");
+ 148   5                      }
+ 149   4                  }
+ 150   3                  COM1.RX_Cnt = 0;
+ 151   3              }
+ 152   2          }
+ 153   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    497    ----
+   CONSTANT SIZE    =     24    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5      17
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

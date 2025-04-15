@@ -1,0 +1,1 @@
+"Timer_Isr.c" OPTIMIZE (8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\Timer_Isr.lst) OBJECT(.\Objects\Timer_Isr.obj)
